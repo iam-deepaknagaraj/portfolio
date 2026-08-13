@@ -1,35 +1,70 @@
 "use client";
 
 import Image from "next/image";
-import { motion, useReducedMotion, useScroll, useTransform } from "framer-motion";
-import { ArrowUpRight, ExternalLink } from "lucide-react";
-import { useRef } from "react";
+import {
+  motion,
+  useMotionValueEvent,
+  useReducedMotion,
+  useScroll,
+  useSpring,
+  useTransform,
+} from "framer-motion";
+import { ArrowUpRight, ExternalLink, Sparkles, Sword, Shield, Trophy } from "lucide-react";
+import { useMemo, useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { FadeIn, Stagger, StaggerItem } from "@/components/fade-in";
+import { CompanyMark, SkillIcon } from "@/components/brand-icons";
 import {
+  achievements,
   education,
   experience,
   projects,
   site,
   skills,
 } from "@/lib/content";
+import { assetPath } from "@/lib/paths";
 
 const ease = [0.22, 1, 0.36, 1] as const;
+
+const achievementIcons = {
+  trophy: Trophy,
+  sword: Sword,
+  spark: Sparkles,
+  shield: Shield,
+} as const;
 
 export function PortfolioPage() {
   const reduce = useReducedMotion();
   const heroRef = useRef<HTMLElement>(null);
-  const { scrollYProgress } = useScroll({
+  const { scrollYProgress } = useScroll();
+  const progress = useSpring(scrollYProgress, { stiffness: 120, damping: 28 });
+  const [explored, setExplored] = useState(0);
+
+  useMotionValueEvent(progress, "change", (v) => {
+    setExplored(Math.round(v * 100));
+  });
+
+  const { scrollYProgress: heroProgress } = useScroll({
     target: heroRef,
     offset: ["start start", "end start"],
   });
-  const heroY = useTransform(scrollYProgress, [0, 1], [0, reduce ? 0 : 80]);
-  const heroOpacity = useTransform(scrollYProgress, [0, 0.85], [1, reduce ? 1 : 0.35]);
+  const heroY = useTransform(heroProgress, [0, 1], [0, reduce ? 0 : 70]);
+  const heroOpacity = useTransform(heroProgress, [0, 0.9], [1, reduce ? 1 : 0.4]);
+
+  const xpPct = useMemo(
+    () => Math.round((site.xp / site.xpNext) * 100),
+    []
+  );
 
   return (
     <div className="relative min-h-screen overflow-hidden bg-[var(--page-bg)] text-[var(--page-ink)]">
+      <motion.div
+        className="fixed inset-x-0 top-0 z-50 h-1 origin-left bg-[var(--page-accent)]"
+        style={{ scaleX: progress }}
+      />
+
       <div className="pointer-events-none absolute inset-0 -z-10">
         <motion.div
           className="absolute -top-24 right-[-10%] h-[420px] w-[420px] rounded-full bg-[radial-gradient(circle,rgba(47,158,143,0.28),transparent_65%)] blur-2xl"
@@ -49,56 +84,57 @@ export function PortfolioPage() {
           }
           transition={{ duration: 18, repeat: Infinity, ease: "easeInOut", delay: 1 }}
         />
-        <div
-          className="absolute inset-0 opacity-[0.35]"
-          style={{
-            backgroundImage:
-              "linear-gradient(rgba(238,243,248,0.04) 1px, transparent 1px), linear-gradient(90deg, rgba(238,243,248,0.04) 1px, transparent 1px)",
-            backgroundSize: "64px 64px",
-            maskImage:
-              "radial-gradient(ellipse at 50% 20%, black 15%, transparent 70%)",
-          }}
-        />
       </div>
 
-      <header className="sticky top-0 z-40 border-b border-white/5 bg-[rgba(10,14,20,0.72)] backdrop-blur-md">
-        <div className="mx-auto flex h-14 w-full max-w-5xl items-center justify-between px-5">
+      <div className="pointer-events-none fixed inset-x-0 top-3 z-40 flex justify-center px-4">
+        <div className="pointer-events-auto flex w-full max-w-xl items-center gap-3 rounded-full border border-white/10 bg-[rgba(10,14,20,0.82)] px-3 py-2 shadow-[0_10px_40px_rgba(0,0,0,0.35)] backdrop-blur-md">
           <a
             href="#top"
-            className="font-[family-name:var(--font-display)] text-sm font-extrabold tracking-[0.08em]"
+            className="flex size-9 shrink-0 items-center justify-center rounded-full bg-[var(--page-accent)]/20 font-[family-name:var(--font-display)] text-xs font-extrabold text-[var(--page-accent)]"
           >
-            DN
+            Lv{site.level}
           </a>
-          <nav className="flex items-center gap-1 text-sm text-[var(--page-muted)]">
-            <a className="hidden rounded-full px-3 py-1.5 hover:text-[var(--page-ink)] sm:inline" href="#work">
-              Work
-            </a>
-            <a className="hidden rounded-full px-3 py-1.5 hover:text-[var(--page-ink)] sm:inline" href="#experience">
-              Experience
-            </a>
-            <a className="hidden rounded-full px-3 py-1.5 hover:text-[var(--page-ink)] sm:inline" href="#about">
-              About
-            </a>
-            <Button
-              render={<a href={site.links.github} target="_blank" rel="noopener noreferrer" />}
-              variant="outline"
-              size="sm"
-              className="ml-1 rounded-full border-white/15 bg-transparent"
-            >
-              GitHub
-            </Button>
-          </nav>
+          <div className="min-w-0 flex-1">
+            <div className="flex items-center justify-between text-[0.68rem] uppercase tracking-[0.12em] text-[var(--page-muted)]">
+              <span>Profile XP</span>
+              <span>
+                {site.xp.toLocaleString()} / {site.xpNext.toLocaleString()}
+              </span>
+            </div>
+            <div className="mt-1 h-1.5 overflow-hidden rounded-full bg-white/10">
+              <motion.div
+                className="h-full rounded-full bg-[linear-gradient(90deg,#2f9e8f,#d4a15c)]"
+                initial={reduce ? false : { width: 0 }}
+                animate={{ width: `${xpPct}%` }}
+                transition={{ duration: 1.1, ease }}
+              />
+            </div>
+          </div>
+          <div className="hidden items-center gap-1 text-[0.7rem] text-[var(--page-muted)] sm:flex">
+            <span className="rounded-full border border-white/10 px-2 py-1">
+              Map {explored}%
+            </span>
+          </div>
         </div>
-      </header>
+      </div>
 
       <main id="top" className="mx-auto w-full max-w-5xl px-5">
         <motion.section
           ref={heroRef}
           style={{ y: heroY, opacity: heroOpacity }}
-          className="flex min-h-[calc(100vh-3.5rem)] flex-col justify-end pb-16 pt-16"
+          className="flex min-h-[calc(100vh-1rem)] flex-col justify-end pb-16 pt-28"
         >
           <div className="grid items-end gap-10 lg:grid-cols-[minmax(0,1fr)_auto]">
             <div>
+              <motion.p
+                className="mb-3 inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/5 px-3 py-1 text-xs text-[var(--page-muted)]"
+                initial={reduce ? false : { opacity: 0, y: 18 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.6, ease }}
+              >
+                <Sparkles className="size-3.5 text-[var(--page-warm)]" />
+                Class: Full-stack builder · Region: {site.location}
+              </motion.p>
               <motion.p
                 className="font-[family-name:var(--font-display)] text-[clamp(2.75rem,9vw,5.5rem)] font-extrabold leading-[0.92] tracking-[-0.04em]"
                 initial={reduce ? false : { opacity: 0, y: 28 }}
@@ -121,7 +157,7 @@ export function PortfolioPage() {
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.75, delay: 0.16, ease }}
               >
-                {site.title} based in {site.location}. {site.summary}
+                {site.title}. {site.summary}
               </motion.p>
               <motion.div
                 className="mt-8 flex flex-wrap gap-3"
@@ -134,7 +170,7 @@ export function PortfolioPage() {
                   size="lg"
                   className="rounded-full bg-[var(--page-accent)] px-5 text-[var(--page-accent-ink)] hover:bg-[var(--page-accent-hover)]"
                 >
-                  View experience
+                  Start quest log
                 </Button>
                 <Button
                   render={<a href={site.links.linkedin} target="_blank" rel="noopener noreferrer" />}
@@ -161,29 +197,63 @@ export function PortfolioPage() {
               />
               <div className="relative overflow-hidden rounded-[1.75rem] border border-white/15 shadow-[0_24px_60px_rgba(0,0,0,0.45)]">
                 <Image
-                  src={site.image}
+                  src={assetPath(site.image)}
                   alt={`${site.name} portrait`}
                   width={400}
                   height={400}
                   priority
+                  unoptimized
                   className="aspect-square h-auto w-full object-cover"
                 />
+              </div>
+              <div className="absolute -bottom-3 left-1/2 flex -translate-x-1/2 items-center gap-2 rounded-full border border-white/15 bg-[rgba(10,14,20,0.92)] px-3 py-1.5 text-xs shadow-lg">
+                <span className="text-[var(--page-accent)]">★</span>
+                <span>Level {site.level} unlocked</span>
               </div>
             </motion.div>
           </div>
         </motion.section>
 
-        <section id="work" className="scroll-mt-20 pb-20">
+        <section id="achievements" className="scroll-mt-24 pb-16">
           <FadeIn>
             <p className="text-xs font-semibold uppercase tracking-[0.14em] text-[var(--page-accent)]">
-              Selected work
+              Achievements
+            </p>
+            <h2 className="mt-2 font-[family-name:var(--font-display)] text-3xl font-bold tracking-[-0.02em]">
+              Unlocked badges
+            </h2>
+          </FadeIn>
+          <Stagger className="mt-6 grid gap-3 sm:grid-cols-2">
+            {achievements.map((item) => {
+              const Icon = achievementIcons[item.icon];
+              return (
+                <StaggerItem key={item.id}>
+                  <motion.div
+                    whileHover={reduce ? undefined : { y: -4, scale: 1.01 }}
+                    className="flex items-start gap-3 rounded-2xl border border-white/10 bg-white/[0.03] p-4"
+                  >
+                    <div className="flex size-10 items-center justify-center rounded-xl bg-[var(--page-accent)]/15 text-[var(--page-accent)]">
+                      <Icon className="size-5" />
+                    </div>
+                    <div>
+                      <p className="font-semibold">{item.title}</p>
+                      <p className="mt-1 text-sm text-[var(--page-muted)]">{item.detail}</p>
+                    </div>
+                  </motion.div>
+                </StaggerItem>
+              );
+            })}
+          </Stagger>
+        </section>
+
+        <section id="work" className="scroll-mt-24 pb-20">
+          <FadeIn>
+            <p className="text-xs font-semibold uppercase tracking-[0.14em] text-[var(--page-accent)]">
+              Side quests
             </p>
             <h2 className="mt-2 font-[family-name:var(--font-display)] text-3xl font-bold tracking-[-0.02em]">
               Projects &amp; experiments
             </h2>
-            <p className="mt-3 max-w-[48ch] text-[var(--page-muted)]">
-              Public work spanning integrations, plugin exploration, and local developer setups.
-            </p>
           </FadeIn>
           <Stagger className="mt-8 border-t border-white/10">
             {projects.map((project) => (
@@ -198,12 +268,15 @@ export function PortfolioPage() {
                 >
                   <div className="flex items-start justify-between gap-4">
                     <div>
-                      <div className="mb-2 flex flex-wrap gap-2">
+                      <div className="mb-2 flex flex-wrap items-center gap-2">
+                        <Badge className="rounded-full bg-[var(--page-warm)]/15 text-[var(--page-warm)]">
+                          +{project.xp} XP
+                        </Badge>
                         {project.tags.map((tag) => (
                           <Badge
                             key={tag}
                             variant="secondary"
-                            className="rounded-full bg-[rgba(212,161,92,0.12)] text-[var(--page-warm)]"
+                            className="rounded-full bg-white/5 text-[var(--page-muted)]"
                           >
                             {tag}
                           </Badge>
@@ -216,12 +289,7 @@ export function PortfolioPage() {
                         {project.description}
                       </p>
                     </div>
-                    <motion.span
-                      className="mt-1 inline-flex"
-                      whileHover={reduce ? undefined : { x: 3, y: -3 }}
-                    >
-                      <ArrowUpRight className="size-5 shrink-0 text-[var(--page-muted)] group-hover:text-[var(--page-ink)]" />
-                    </motion.span>
+                    <ArrowUpRight className="mt-1 size-5 shrink-0 text-[var(--page-muted)] group-hover:text-[var(--page-ink)]" />
                   </div>
                 </motion.a>
               </StaggerItem>
@@ -229,22 +297,22 @@ export function PortfolioPage() {
           </Stagger>
         </section>
 
-        <section id="experience" className="scroll-mt-20 pb-20">
+        <section id="experience" className="scroll-mt-24 pb-20">
           <FadeIn>
             <p className="text-xs font-semibold uppercase tracking-[0.14em] text-[var(--page-accent)]">
-              Experience
+              Quest log
             </p>
             <h2 className="mt-2 font-[family-name:var(--font-display)] text-3xl font-bold tracking-[-0.02em]">
               Where I&apos;ve worked
             </h2>
             <p className="mt-3 max-w-[48ch] text-[var(--page-muted)]">
-              Full timeline of roles. Current employer name is kept private.
+              Company marks for past roles. Current employer stays generic.
             </p>
           </FadeIn>
 
-          <div className="relative mt-10 space-y-0">
+          <div className="relative mt-10">
             <motion.div
-              className="absolute bottom-2 left-[0.4rem] top-2 w-px origin-top bg-[var(--page-accent)]/35 sm:left-[9.65rem]"
+              className="absolute bottom-4 left-[1.35rem] top-4 w-px origin-top bg-[var(--page-accent)]/35 sm:left-[11.15rem]"
               initial={reduce ? false : { scaleY: 0 }}
               whileInView={{ scaleY: 1 }}
               viewport={{ once: true, amount: 0.1 }}
@@ -253,25 +321,41 @@ export function PortfolioPage() {
             <Stagger>
               {experience.map((job) => (
                 <StaggerItem key={`${job.org}-${job.role}-${job.period}`}>
-                  <article className="relative grid gap-3 py-6 pl-8 sm:grid-cols-[10rem_1fr] sm:pl-0">
-                    <span className="absolute left-0 top-8 size-2.5 rounded-full bg-[var(--page-accent)] shadow-[0_0_0_4px_rgba(47,158,143,0.2)] sm:left-[9.4rem]" />
-                    <p className="pt-0.5 text-sm text-[var(--page-muted)] sm:pr-6 sm:text-right">
+                  <article className="relative grid gap-4 py-6 pl-14 sm:grid-cols-[9.5rem_1fr] sm:gap-6 sm:pl-0">
+                    <span className="absolute left-[1.05rem] top-9 size-2.5 rounded-full bg-[var(--page-accent)] shadow-[0_0_0_4px_rgba(47,158,143,0.2)] sm:left-[10.85rem]" />
+                    <p className="pt-2 text-sm text-[var(--page-muted)] sm:pr-2 sm:text-right">
                       {job.period}
                     </p>
-                    <div>
-                      <div className="flex flex-wrap items-center gap-2">
-                        <h3 className="font-[family-name:var(--font-display)] text-xl font-bold">
-                          {job.role}
-                        </h3>
-                        {job.current ? (
-                          <Badge className="rounded-full bg-[var(--page-accent)]/20 text-[var(--page-accent)]">
-                            Current
-                          </Badge>
-                        ) : null}
+                    <div className="rounded-2xl border border-white/10 bg-white/[0.025] p-4 sm:p-5">
+                      <div className="flex flex-wrap items-start gap-3">
+                        <CompanyMark logo={job.logo} />
+                        <div className="min-w-0 flex-1">
+                          <div className="flex flex-wrap items-center gap-2">
+                            <h3 className="font-[family-name:var(--font-display)] text-xl font-bold">
+                              {job.role}
+                            </h3>
+                            {job.current ? (
+                              <Badge className="rounded-full bg-[var(--page-accent)]/20 text-[var(--page-accent)]">
+                                Current
+                              </Badge>
+                            ) : null}
+                          </div>
+                          <p className="mt-1 text-sm text-[var(--page-warm)]">
+                            {job.org} · {job.location}
+                          </p>
+                        </div>
                       </div>
-                      <p className="mt-1 text-sm text-[var(--page-warm)]">
-                        {job.org} · {job.location}
-                      </p>
+                      <div className="mt-3 flex flex-wrap gap-2">
+                        {job.stack.map((id) => (
+                          <span
+                            key={id}
+                            className="inline-flex items-center gap-1.5 rounded-full border border-white/10 bg-black/20 px-2.5 py-1 text-xs text-[var(--page-ink)]"
+                          >
+                            <SkillIcon id={id} className="size-3.5" />
+                            {skills.find((s) => s.id === id)?.label}
+                          </span>
+                        ))}
+                      </div>
                       <ul className="mt-3 space-y-2 text-[var(--page-muted)]">
                         {job.points.map((point) => (
                           <li key={point} className="leading-relaxed">
@@ -287,35 +371,58 @@ export function PortfolioPage() {
           </div>
         </section>
 
-        <section id="skills" className="scroll-mt-20 pb-20">
+        <section id="skills" className="scroll-mt-24 pb-20">
           <FadeIn>
             <p className="text-xs font-semibold uppercase tracking-[0.14em] text-[var(--page-accent)]">
-              Skills
+              Skill tree
             </p>
             <h2 className="mt-2 font-[family-name:var(--font-display)] text-3xl font-bold tracking-[-0.02em]">
               Tools I work with
             </h2>
+            <p className="mt-3 max-w-[48ch] text-[var(--page-muted)]">
+              Each skill has a level bar — hover to power up the card.
+            </p>
           </FadeIn>
-          <Stagger className="mt-6 flex flex-wrap gap-2">
+          <Stagger className="mt-6 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
             {skills.map((skill) => (
-              <StaggerItem key={skill}>
-                <motion.div whileHover={reduce ? undefined : { y: -3, scale: 1.04 }}>
-                  <Badge
-                    variant="outline"
-                    className="rounded-full border-white/15 px-3 py-1.5 text-sm text-[var(--page-ink)]"
-                  >
-                    {skill}
-                  </Badge>
+              <StaggerItem key={skill.id}>
+                <motion.div
+                  whileHover={reduce ? undefined : { y: -4, scale: 1.02 }}
+                  className="rounded-2xl border border-white/10 bg-white/[0.03] p-4"
+                >
+                  <div className="flex items-center gap-3">
+                    <div className="flex size-10 items-center justify-center rounded-xl border border-white/10 bg-black/25">
+                      <SkillIcon id={skill.id} className="size-5" />
+                    </div>
+                    <div className="min-w-0 flex-1">
+                      <div className="flex items-center justify-between gap-2">
+                        <p className="truncate font-semibold">{skill.label}</p>
+                        <span className="text-xs text-[var(--page-accent)]">Lv {Math.round(skill.level / 10)}</span>
+                      </div>
+                      <div className="mt-2 h-1.5 overflow-hidden rounded-full bg-white/10">
+                        <motion.div
+                          className="h-full rounded-full bg-[linear-gradient(90deg,#2f9e8f,#58c4b4)]"
+                          initial={reduce ? false : { width: 0 }}
+                          whileInView={{ width: `${skill.level}%` }}
+                          viewport={{ once: true }}
+                          transition={{ duration: 0.9, ease }}
+                        />
+                      </div>
+                      <p className="mt-1 text-[0.7rem] text-[var(--page-muted)]">
+                        {skill.xp} XP · {skill.level}% mastery
+                      </p>
+                    </div>
+                  </div>
                 </motion.div>
               </StaggerItem>
             ))}
           </Stagger>
         </section>
 
-        <section id="about" className="scroll-mt-20 pb-20">
+        <section id="about" className="scroll-mt-24 pb-20">
           <FadeIn>
             <p className="text-xs font-semibold uppercase tracking-[0.14em] text-[var(--page-accent)]">
-              About
+              Lore
             </p>
             <h2 className="mt-2 font-[family-name:var(--font-display)] text-3xl font-bold tracking-[-0.02em]">
               Building useful software
@@ -329,11 +436,11 @@ export function PortfolioPage() {
           </FadeIn>
         </section>
 
-        <section id="contact" className="scroll-mt-20 pb-24">
+        <section id="contact" className="scroll-mt-24 pb-24">
           <FadeIn>
             <Separator className="mb-10 bg-white/10" />
             <p className="text-xs font-semibold uppercase tracking-[0.14em] text-[var(--page-accent)]">
-              Contact
+              Multiplayer
             </p>
             <h2 className="mt-2 font-[family-name:var(--font-display)] text-3xl font-bold tracking-[-0.02em]">
               Let&apos;s connect
@@ -373,7 +480,9 @@ export function PortfolioPage() {
           <p>
             © {new Date().getFullYear()} {site.name}
           </p>
-          <p>{site.location}</p>
+          <p>
+            Map explored: {explored}%
+          </p>
         </div>
       </footer>
     </div>
