@@ -5,6 +5,7 @@ export const site = {
   tagline: "I build reliable product features and integrations for modern teams.",
   summary:
     "Technology professional with experience in software engineering and project delivery. I focus on clean product surfaces, API integrations, and practical tooling that helps teams ship with confidence.",
+  image: "/avatar.jpg",
   links: {
     github: "https://github.com/iam-deepaknagaraj",
     linkedin: "https://www.linkedin.com/in/the-deepaknagaraj/",
@@ -12,28 +13,57 @@ export const site = {
   },
 } as const;
 
-/** Generic roles — employer names intentionally omitted. */
+/**
+ * Work history from public LinkedIn profile.
+ * Current employer name intentionally omitted.
+ */
 export const experience = [
   {
     role: "Software Engineer",
     org: "Enterprise product engineering",
-    period: "Present",
+    period: "Dec 2025 – Present",
     location: "Bengaluru, India",
+    current: true,
     points: [
-      "Design and ship product features on web platforms used by cross-functional teams.",
-      "Build integrations across project management and collaboration tools.",
-      "Improve developer workflows with plugins, automation, and clear UX.",
+      "Contribute to design, development, and maintenance of scalable web applications across frontend and backend.",
+      "Ship features, fix issues, and improve reliability in close collaboration with product, design, and QA.",
+      "Write clean, maintainable code with a focus on seamless integration and performance.",
     ],
   },
   {
-    role: "Software Engineering",
-    org: "Earlier roles & projects",
-    period: "Prior experience",
-    location: "India",
+    role: "Technical Lead",
+    org: "HCLTech",
+    period: "Nov 2024 – Nov 2025",
+    location: "Bengaluru, India",
+    current: false,
     points: [
-      "Delivered application features across full-stack web stacks.",
-      "Collaborated with product and engineering partners on iterative releases.",
-      "Owned bug fixes, enhancements, and production support for customer-facing flows.",
+      "Led engineering delivery for product features and technical workstreams.",
+      "Guided implementation decisions, code quality, and collaboration across the team.",
+      "Partnered with stakeholders to translate requirements into reliable releases.",
+    ],
+  },
+  {
+    role: "Software Head",
+    org: "Nara Technologies PVT LTD",
+    period: "Aug 2024 – Oct 2024",
+    location: "Bengaluru, India",
+    current: false,
+    points: [
+      "Led engineering direction for software initiatives and end-to-end delivery.",
+      "Drove cross-functional collaboration and continuous improvement practices.",
+      "Mentored engineers and aligned technical execution with business goals.",
+    ],
+  },
+  {
+    role: "Software Developer",
+    org: "Nara Technologies PVT LTD",
+    period: "Aug 2019 – Jul 2021",
+    location: "Bengaluru, India",
+    current: false,
+    points: [
+      "Built and maintained application features across the software stack.",
+      "Supported product releases through development, fixes, and iterative improvements.",
+      "Collaborated with teammates to deliver customer-facing functionality.",
     ],
   },
 ] as const;
@@ -41,7 +71,7 @@ export const experience = [
 export const education = [
   {
     school: "Sapthgiri College of Engineering",
-    detail: "Engineering",
+    detail: "Bachelor of Engineering — Computer Science",
     location: "Bengaluru, India",
   },
 ] as const;
