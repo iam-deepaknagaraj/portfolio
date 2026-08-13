@@ -51,7 +51,7 @@ export const skills: {
 
 /**
  * Work history from public LinkedIn profile.
- * Current employer name intentionally omitted (no Bayer branding).
+ * Current employer name intentionally omitted.
  */
 export const experience = [
   {
